@@ -1,0 +1,11 @@
+// Firestore 보안 규칙 — Firebase 콘솔 > Firestore Database > 규칙 탭에 붙여넣고 게시
+// 로그인한 사용자가 자기 데이터(users/{본인uid} 하위 전체)만 읽고 쓸 수 있음
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
