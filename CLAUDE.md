@@ -42,7 +42,11 @@
 ## 진행 상황
 - [x] Day 0: 환경 세팅, Firebase/Gemini/식약처 키 확보
 - [x] Day 1: SDK54 프로젝트, 폴더구조/타입, Firebase 연동, 로그인/회원가입, 프로필 입력 + 목표 칼로리 자동 계산, 홈(요약)
-- [ ] Day 2: 카메라/갤러리 → Gemini 분석 → 결과(수정 가능) → meals 저장
+- [x] Day 2: 카메라/갤러리 → Gemini(2.5 Flash, 구조화 출력) 분석 → 결과(수정 가능) → meals 저장. 홈에 섭취/남은 칼로리·식사 목록·삭제(길게누르기) 반영.
+  - 새 파일: services/gemini.ts, services/meals.ts, utils/date.ts, app/add-meal.tsx
+  - 변경: app/(tabs)/index.tsx(홈), app/_layout.tsx(add-meal 라우트), app.json(expo-image-picker 권한)
+  - 의존성 추가 필요: expo-image-picker (npx expo install)
+  - ⚠️ Gemini 키는 신형 "AQ." 형식 — REST 정상 작동 확인됨
 - [ ] Day 3: 식약처 영양 보정, 홈 섭취 현황
 - [ ] Day 4: 실사용 검증
 - 이후 로드맵: `../에이코치_개발_로드맵.md` 참고

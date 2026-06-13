@@ -15,4 +15,51 @@ import { AuthProvider, useAuth } from '@/contexts/auth-context';
 function RootNavigator() {
   const { user, profile, loading } = useAuth();
   const segments = useSegments();
-  const router =
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const first = segments[0];
+    const inAuthScreens = first === 'login' || first === 'signup';
+    const onProfileSetup = first === 'profile-setup';
+
+    if (!user) {
+      if (!inAuthScreens) router.replace('/login');
+    } else if (!profile) {
+      if (!onProfileSetup) router.replace('/profile-setup');
+    } else {
+      if (inAuthScreens || onProfileSetup) router.replace('/');
+    }
+  }, [user, profile, loading, segments, router]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#208AEF" />
+      </View>
+    );
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="login" />
+      <Stack.Screen name="signup" />
+      <Stack.Screen name="profile-setup" />
+      <Stack.Screen name="add-meal" options={{ presentation: 'modal' }} />
+    </Stack>
+  );
+}
+
+export default function RootLayout() {
+  const colorScheme = useColorScheme();
+  return (
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+      <StatusBar style="auto" />
+    </ThemeProvider>
+  );
+}
