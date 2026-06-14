@@ -1,5 +1,5 @@
-// 홈 대시보드 (Day 2)
-// 목표 칼로리 + 오늘 섭취/남은 칼로리 + 오늘의 식사 목록 + 식사 기록 버튼
+// 홈 대시보드 (목표 모드 + 칼로리/단백질 현황)
+// 목표 방향(감량/유지/증량) · 남은 칼로리 · 단백질 목표 대비 섭취 · 오늘의 식사
 
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -16,13 +16,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/contexts/auth-context';
 import { signOut } from '@/services/auth';
-import { deleteMeal, getMealsByDate, sumCalories, sumSugar } from '@/services/meals';
-import type { Meal } from '@/types';
-import { calcAge } from '@/utils/calories';
+import { deleteMeal, getMealsByDate, sumCalories, sumProtein, sumSugar } from '@/services/meals';
+import { saveProfile } from '@/services/users';
+import type { GoalMode, Meal } from '@/types';
+import {
+  calcAge,
+  calcGoalCalories,
+  calcTargetCalories,
+  calcTargetProtein,
+  GOAL_DESC,
+  GOAL_LABELS,
+  GOAL_ORDER,
+} from '@/utils/calories';
 import { BLOOD_SUGAR_LABELS, MEAL_TYPE_LABELS, todayKey } from '@/utils/date';
 
 export default function HomeScreen() {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const router = useRouter();
 
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -68,6 +77,32 @@ export default function HomeScreen() {
   const remaining = profile.targetCalories - consumed;
   const totalSugar = sumSugar(meals);
 
+  // 목표 방향 + 단백질 (하위호환: 미설정이면 유지/체중기반 계산)
+  const goal: GoalMode = profile.goalMode ?? 'maintain';
+  const targetProtein = profile.targetProtein ?? calcTargetProtein(profile.weight, goal);
+  const consumedProtein = sumProtein(meals);
+  const proteinPct =
+    targetProtein > 0 ? Math.min(100, Math.round((consumedProtein / targetProtein) * 100)) : 0;
+
+  // 목표 모드 변경 → 칼로리·단백질 목표 재계산 후 저장 (기존 사용자도 즉시 적용)
+  async function changeGoal(g: GoalMode) {
+    if (!user || !profile || g === profile.goalMode) return;
+    const tdee = calcTargetCalories(
+      profile.gender,
+      profile.weight,
+      profile.height,
+      profile.birthDate,
+      profile.activityLevel
+    );
+    await saveProfile(user.uid, {
+      ...profile,
+      goalMode: g,
+      targetCalories: calcGoalCalories(tdee, g),
+      targetProtein: calcTargetProtein(profile.weight, g),
+    });
+    await refreshProfile();
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
@@ -81,9 +116,23 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* 목표 모드 선택 (탭하면 즉시 적용) */}
+        <View style={styles.goalRow}>
+          {GOAL_ORDER.map((g) => (
+            <TouchableOpacity
+              key={g}
+              style={[styles.goalTab, goal === g && styles.goalTabActive]}
+              onPress={() => changeGoal(g)}>
+              <Text style={[styles.goalTabText, goal === g && styles.goalTabTextActive]}>
+                {GOAL_LABELS[g]}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {/* 오늘의 칼로리 카드 */}
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>오늘 남은 칼로리</Text>
+          <Text style={styles.cardLabel}>{GOAL_DESC[goal]} · 남은 칼로리</Text>
           <Text style={styles.bigNumber}>
             {remaining.toLocaleString()}
             <Text style={styles.unit}> kcal</Text>
@@ -93,6 +142,25 @@ export default function HomeScreen() {
             <Text style={styles.cardSub}>섭취 {consumed.toLocaleString()}</Text>
             <Text style={styles.cardSub}>당류 {totalSugar}g</Text>
           </View>
+        </View>
+
+        {/* 단백질 게이지 (근육 조절 핵심 지표) */}
+        <View style={styles.proteinCard}>
+          <View style={styles.proteinTop}>
+            <Text style={styles.proteinLabel}>단백질 · 근육</Text>
+            <Text style={styles.proteinNums}>
+              {consumedProtein}
+              <Text style={styles.proteinTarget}> / {targetProtein}g</Text>
+            </Text>
+          </View>
+          <View style={styles.barTrack}>
+            <View style={[styles.barFill, { width: `${proteinPct}%` }]} />
+          </View>
+          <Text style={styles.proteinHint}>
+            {consumedProtein >= targetProtein
+              ? '목표 달성 — 근육 합성에 충분해요 💪'
+              : `목표까지 ${targetProtein - consumedProtein}g 남았어요`}
+          </Text>
         </View>
 
         {/* 식사 기록 버튼 */}
@@ -183,7 +251,34 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 15, color: '#60646C' },
   name: { fontSize: 24, fontWeight: '800', color: '#000', marginTop: 2 },
   logout: { fontSize: 14, color: '#9AA0A6' },
+  goalRow: { flexDirection: 'row', gap: 8, marginBottom: 14 },
+  goalTab: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#E0E1E6',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 11,
+    alignItems: 'center',
+  },
+  goalTabActive: { backgroundColor: '#208AEF', borderColor: '#208AEF' },
+  goalTabText: { fontSize: 15, color: '#60646C', fontWeight: '700' },
+  goalTabTextActive: { color: '#fff' },
+
   card: { backgroundColor: '#208AEF', borderRadius: 20, padding: 24, marginBottom: 16 },
+  proteinCard: { backgroundColor: '#fff', borderRadius: 20, padding: 20, marginBottom: 8 },
+  proteinTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: 12,
+  },
+  proteinLabel: { fontSize: 15, fontWeight: '700', color: '#000' },
+  proteinNums: { fontSize: 22, fontWeight: '800', color: '#208AEF' },
+  proteinTarget: { fontSize: 14, fontWeight: '600', color: '#9AA0A6' },
+  barTrack: { height: 12, borderRadius: 999, backgroundColor: '#EDEEF0', overflow: 'hidden' },
+  barFill: { height: '100%', borderRadius: 999, backgroundColor: '#208AEF' },
+  proteinHint: { fontSize: 12, color: '#60646C', marginTop: 8 },
   cardLabel: { color: '#D6E9FF', fontSize: 14, fontWeight: '600' },
   bigNumber: { color: '#fff', fontSize: 44, fontWeight: '800', marginTop: 6 },
   unit: { fontSize: 18, fontWeight: '600' },

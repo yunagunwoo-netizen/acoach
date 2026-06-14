@@ -38,3 +38,11 @@ export function sumCalories(meals: Meal[]): number {
 export function sumSugar(meals: Meal[]): number {
   return meals.reduce((acc, m) => acc + (m.totalSugar || 0), 0);
 }
+
+// 하루 섭취 단백질 합계(g) — 근육 조절 핵심 지표. Meal.foods의 protein 합산.
+export function sumProtein(meals: Meal[]): number {
+  return meals.reduce(
+    (acc, m) => acc + (m.foods?.reduce((s, f) => s + (f.protein || 0), 0) || 0),
+    0
+  );
+}

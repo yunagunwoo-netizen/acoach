@@ -10,6 +10,12 @@ export type ActivityLevel =
   | 'active' // 활발한 활동
   | 'very_active'; // 매우 활발
 
+// 목표 방향 — 칼로리·단백질 목표를 다르게 잡는 기준 (북극성: 칼로리 수지 + 근육량 조절)
+export type GoalMode =
+  | 'lose' // 체지방 감량
+  | 'maintain' // 현상 유지
+  | 'gain'; // 근육 증량
+
 // 사용자 프로필 (Firestore: users/{userId})
 export interface UserProfile {
   name: string;
@@ -18,7 +24,9 @@ export interface UserProfile {
   height: number; // cm
   weight: number; // kg
   activityLevel: ActivityLevel;
-  targetCalories: number; // 일일 목표 칼로리 (자동 계산)
+  goalMode?: GoalMode; // 목표 방향 (미설정=유지로 간주, 하위호환)
+  targetCalories: number; // 일일 목표 칼로리 (목표 방향 반영)
+  targetProtein?: number; // 일일 목표 단백질(g) — 근육 조절 핵심 지표
   targetBloodSugar?: { fasting: number; postMeal: number };
   createdAt: number; // timestamp (ms)
   role?: 'user' | 'premium' | 'admin'; // 🔮 서비스 전환 대비

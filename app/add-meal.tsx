@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import FoodSearchModal from '@/components/food-search-modal';
 import { useAuth } from '@/contexts/auth-context';
 import { analyzeFoodImage } from '@/services/gemini';
 import { saveMeal } from '@/services/meals';
@@ -49,6 +50,7 @@ export default function AddMealScreen() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [searchIndex, setSearchIndex] = useState<number | null>(null); // 식약처 보정 대상
 
   const totalCalories = foods.reduce((a, f) => a + (Number(f.calories) || 0), 0);
   const totalSugar = foods.reduce((a, f) => a + (Number(f.sugar) || 0), 0);
@@ -56,17 +58,22 @@ export default function AddMealScreen() {
   async function pickFrom(source: 'camera' | 'library') {
     setError('');
     try {
-      const perm =
-        source === 'camera'
+      // 웹(PWA)에서는 카메라 직접 실행이 제한적 → 파일 선택창 사용
+      // (모바일 브라우저는 파일 선택창에서 바로 촬영 가능). 권한 요청도 네이티브에서만.
+      const useCamera = source === 'camera' && Platform.OS !== 'web';
+
+      if (Platform.OS !== 'web') {
+        const perm = useCamera
           ? await ImagePicker.requestCameraPermissionsAsync()
           : await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!perm.granted) {
-        setError(
-          source === 'camera'
-            ? '카메라 권한이 필요합니다. 설정에서 허용해 주세요.'
-            : '사진 접근 권한이 필요합니다. 설정에서 허용해 주세요.'
-        );
-        return;
+        if (!perm.granted) {
+          setError(
+            useCamera
+              ? '카메라 권한이 필요합니다. 설정에서 허용해 주세요.'
+              : '사진 접근 권한이 필요합니다. 설정에서 허용해 주세요.'
+          );
+          return;
+        }
       }
 
       const opts: ImagePicker.ImagePickerOptions = {
@@ -76,10 +83,9 @@ export default function AddMealScreen() {
         quality: 0.4,
         base64: true,
       };
-      const result =
-        source === 'camera'
-          ? await ImagePicker.launchCameraAsync(opts)
-          : await ImagePicker.launchImageLibraryAsync(opts);
+      const result = useCamera
+        ? await ImagePicker.launchCameraAsync(opts)
+        : await ImagePicker.launchImageLibraryAsync(opts);
 
       if (result.canceled) return;
       const asset = result.assets[0];
@@ -311,6 +317,11 @@ export default function AddMealScreen() {
                       onChange={(n) => updateFood(i, { sugar: n })}
                     />
                   </View>
+                  <TouchableOpacity
+                    style={styles.correctBtn}
+                    onPress={() => setSearchIndex(i)}>
+                    <Text style={styles.correctBtnText}>🔍 식약처 영양값으로 보정</Text>
+                  </TouchableOpacity>
                 </View>
               ))}
 
@@ -355,6 +366,15 @@ export default function AddMealScreen() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <FoodSearchModal
+        visible={searchIndex !== null}
+        initialQuery={searchIndex !== null ? foods[searchIndex]?.name ?? '' : ''}
+        onClose={() => setSearchIndex(null)}
+        onApply={(food) => {
+          if (searchIndex !== null) updateFood(searchIndex, food);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -489,6 +509,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFB',
   },
   numLabel: { fontSize: 10, color: '#9AA0A6', marginTop: 4 },
+  correctBtn: {
+    marginTop: 12,
+    backgroundColor: '#EAF3FF',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  correctBtnText: { color: '#1666C2', fontSize: 13, fontWeight: '600' },
 
   addFood: {
     borderWidth: 1,

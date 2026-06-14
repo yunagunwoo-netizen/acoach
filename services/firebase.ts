@@ -1,11 +1,13 @@
-// Firebase 초기화 (웹 JS SDK — Expo Go 호환)
+// Firebase 초기화 (웹 JS SDK)
+// 네이티브(Expo Go/APK)와 웹(PWA) 모두 지원 — 로그인 지속성/Firestore 연결을 플랫폼별로 분기
 // 설정값은 .env에서 읽어옴 (EXPO_PUBLIC_ 접두사)
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import * as firebaseAuth from 'firebase/auth';
-import { getAuth, initializeAuth } from 'firebase/auth';
-import { initializeFirestore } from 'firebase/firestore';
+import { browserLocalPersistence, getAuth, initializeAuth } from 'firebase/auth';
+import { getFirestore, initializeFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -19,29 +21,37 @@ const firebaseConfig = {
 // 앱 중복 초기화 방지 (Fast Refresh 대응)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// 로그인 상태를 AsyncStorage에 저장 → 앱 재시작해도 로그인 유지.
-// Firebase 버전에 따라 함수 이름이 달라서(getReactNativePersistence ↔ reactNativeLocalPersistence)
-// 둘 다 시도하고, 둘 다 없으면 기본(메모리) 방식으로 폴백.
-const fa = firebaseAuth as any;
-const rnPersistence =
-  (typeof fa.getReactNativePersistence === 'function'
-    ? fa.getReactNativePersistence(AsyncStorage)
-    : undefined) ?? fa.reactNativeLocalPersistence;
-
 let _auth;
-try {
-  _auth = rnPersistence
-    ? initializeAuth(app, { persistence: rnPersistence })
-    : initializeAuth(app);
-} catch {
-  // 이미 초기화된 경우 (Fast Refresh)
-  _auth = getAuth(app);
+if (Platform.OS === 'web') {
+  // 웹(PWA): 브라우저 저장소(IndexedDB/localStorage)로 로그인 유지
+  try {
+    _auth = initializeAuth(app, { persistence: browserLocalPersistence });
+  } catch {
+    _auth = getAuth(app); // 이미 초기화된 경우
+  }
+} else {
+  // 네이티브: AsyncStorage로 로그인 유지
+  // Firebase 버전에 따라 함수 이름이 달라서(getReactNativePersistence ↔ reactNativeLocalPersistence)
+  // 둘 다 시도하고, 둘 다 없으면 기본(메모리) 방식으로 폴백.
+  const fa = firebaseAuth as any;
+  const rnPersistence =
+    (typeof fa.getReactNativePersistence === 'function'
+      ? fa.getReactNativePersistence(AsyncStorage)
+      : undefined) ?? fa.reactNativeLocalPersistence;
+  try {
+    _auth = rnPersistence
+      ? initializeAuth(app, { persistence: rnPersistence })
+      : initializeAuth(app);
+  } catch {
+    _auth = getAuth(app);
+  }
 }
 export const auth = _auth;
 
-// Firestore — React Native에서 연결 안정성을 위해 long polling 강제
-export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-});
+// Firestore — 네이티브는 연결 안정성을 위해 long polling 강제, 웹은 기본(웹소켓)
+export const db =
+  Platform.OS === 'web'
+    ? getFirestore(app)
+    : initializeFirestore(app, { experimentalForceLongPolling: true });
 
 export default app;

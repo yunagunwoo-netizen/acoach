@@ -47,8 +47,24 @@
   - 변경: app/(tabs)/index.tsx(홈), app/_layout.tsx(add-meal 라우트), app.json(expo-image-picker 권한)
   - 의존성 추가 필요: expo-image-picker (npx expo install)
   - ⚠️ Gemini 키는 신형 "AQ." 형식 — REST 정상 작동 확인됨
-- [ ] Day 3: 식약처 영양 보정, 홈 섭취 현황
-- [ ] Day 4: 실사용 검증
+- [x] Day 3: 식약처 식품영양성분 DB(통합) 연동 → 음식별 "식약처 보정"(검색→후보 선택→그램 입력→공식 영양값 적용). 타입체크 통과.
+  - 새 파일: services/foodDb.ts, components/food-search-modal.tsx
+  - 변경: app/add-meal.tsx(각 음식에 보정 버튼+모달)
+  - 식약처 엔드포인트: https://apis.data.go.kr/1471000/FoodNtrCpntDbInfo02/getFoodNtrCpntDbInq02 (type=json, FOOD_NM_KR=음식명). AMT_NUM 매핑 1=kcal,3=단백,4=지방,6=탄수,7=당류 (100g 기준). EXPO_PUBLIC_FOOD_API_KEY 사용, https 필수.
+  - 남은 보강(후순위): 인식 프롬프트 튜닝(실사용 오류 수집 후), 보정 출처 배지
+- [x] Day 4: 목표 모드(감량/유지/증량) + 단백질 목표. 북극성=칼로리 수지 + 근육량 조절.
+  - 변경: types(GoalMode·goalMode·targetProtein), utils/calories(GOAL_CALORIE_FACTOR 0.85/1.0/1.1, PROTEIN_PER_KG 2.0/1.6/1.8, calcGoalCalories·calcTargetProtein), services/meals(sumProtein), app/profile-setup(목표 선택), app/(tabs)/index(목표 탭 즉시변경+단백질 게이지)
+  - 하위호환: 기존 프로필은 goalMode 미설정 → '유지'로 간주, targetProtein 없으면 체중기반 계산
+  - ⚠️ 환경 글리치: 이 세션에서 리눅스 미러가 '기존 파일 수정'을 반영 안 해 tsc 자동검증 불가 → 원본(Read) 수동 검토로 확인. 폰 리로드가 실제 검증.
+- [x] PWA 배포(GitHub Pages): 같은 코드를 웹으로 내보내 설치형 PWA로. 아이폰도 무료 설치.
+  - 외부 API CORS 확인됨: Gemini(origin 반영), 식약처(`*`) → 웹에서 정상
+  - 변경: services/firebase.ts(웹=브라우저 persistence+getFirestore, 네이티브=기존), app/add-meal.tsx(웹은 카메라→파일선택 폴백), app.json(experiments.baseUrl="/acoach")
+  - 새 파일: app/+html.tsx(manifest·apple meta·SW등록), public/manifest.json, public/sw.js, public/.nojekyll, public/icon-192.png, public/icon-512.png
+  - ⚠️ baseUrl="/acoach" → GitHub 저장소 이름은 반드시 `acoach` (다르면 baseUrl과 manifest/sw/+html의 "/acoach/" 경로 모두 변경)
+  - 배포: `npx expo export -p web` → dist/ → `npx gh-pages -d dist -t true`(.nojekyll 포함 위해 -t). EXPO_PUBLIC_ 키는 로컬 export 시 번들에 인라인됨(공개 번들에 노출 — 가족용 한정 감수)
+  - 웹 한계(경미): Alert.alert(식사 삭제 확인) 등 일부 RN-web UX 차이
+- [ ] (다음) 체성분 기록·추이(체중/체지방률/골격근량), 운동 기록(유산소/근력 구분)
+- [ ] Day 5+: 실사용 검증
 - 이후 로드맵: `../에이코치_개발_로드맵.md` 참고
 
 ## 작업 규칙

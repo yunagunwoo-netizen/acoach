@@ -14,8 +14,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/contexts/auth-context';
 import { saveProfile } from '@/services/users';
-import type { ActivityLevel, Gender, UserProfile } from '@/types';
-import { ACTIVITY_LABELS, calcTargetCalories } from '@/utils/calories';
+import type { ActivityLevel, Gender, GoalMode, UserProfile } from '@/types';
+import {
+  ACTIVITY_LABELS,
+  calcGoalCalories,
+  calcTargetCalories,
+  calcTargetProtein,
+  GOAL_DESC,
+  GOAL_LABELS,
+  GOAL_ORDER,
+} from '@/utils/calories';
 
 const ACTIVITY_ORDER: ActivityLevel[] = [
   'sedentary',
@@ -34,6 +42,7 @@ export default function ProfileSetupScreen() {
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('moderate');
+  const [goalMode, setGoalMode] = useState<GoalMode>('maintain');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -55,7 +64,9 @@ export default function ProfileSetupScreen() {
     if (!w || w < 20 || w > 300) return setError('몸무게를 올바르게 입력해 주세요. (kg)');
     if (!user) return setError('로그인 정보를 찾을 수 없습니다.');
 
-    const targetCalories = calcTargetCalories(gender, w, h, birthDate, activityLevel);
+    const tdee = calcTargetCalories(gender, w, h, birthDate, activityLevel);
+    const targetCalories = calcGoalCalories(tdee, goalMode);
+    const targetProtein = calcTargetProtein(w, goalMode);
 
     const profile: UserProfile = {
       name: name.trim(),
@@ -64,7 +75,9 @@ export default function ProfileSetupScreen() {
       height: h,
       weight: w,
       activityLevel,
+      goalMode,
       targetCalories,
+      targetProtein,
       targetBloodSugar: { fasting: 100, postMeal: 140 },
       createdAt: Date.now(),
       role: 'user',
@@ -152,6 +165,23 @@ export default function ProfileSetupScreen() {
           </TouchableOpacity>
         ))}
 
+        <Text style={styles.label}>목표</Text>
+        <View style={styles.row}>
+          {GOAL_ORDER.map((g) => (
+            <TouchableOpacity
+              key={g}
+              style={[styles.goalChip, goalMode === g && styles.goalChipActive]}
+              onPress={() => setGoalMode(g)}>
+              <Text style={[styles.goalLabel, goalMode === g && styles.goalLabelActive]}>
+                {GOAL_LABELS[g]}
+              </Text>
+              <Text style={[styles.goalDesc, goalMode === g && styles.goalDescActive]}>
+                {GOAL_DESC[g]}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
         <TouchableOpacity
@@ -214,6 +244,19 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: '#208AEF', borderColor: '#208AEF' },
   chipText: { fontSize: 15, color: '#60646C', fontWeight: '600' },
   chipTextActive: { color: '#fff' },
+  goalChip: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#E0E1E6',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  goalChipActive: { backgroundColor: '#EAF3FF', borderColor: '#208AEF' },
+  goalLabel: { fontSize: 15, color: '#3C4043', fontWeight: '700' },
+  goalLabelActive: { color: '#1666C2' },
+  goalDesc: { fontSize: 11, color: '#9AA0A6', marginTop: 3 },
+  goalDescActive: { color: '#1666C2' },
   activityItem: {
     borderWidth: 1,
     borderColor: '#E0E1E6',
