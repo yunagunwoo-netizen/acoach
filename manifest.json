@@ -1,0 +1,16 @@
+{
+  "name": "에이코치",
+  "short_name": "에이코치",
+  "description": "사진 한 장으로 칼로리·영양·혈당을 추정하고 식단·운동·근육을 코칭하는 건강관리 앱",
+  "start_url": "/acoach/",
+  "scope": "/acoach/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#208AEF",
+  "lang": "ko",
+  "icons": [
+    { "src": "/acoach/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/acoach/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
