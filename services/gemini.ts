@@ -1,11 +1,12 @@
 // 음식 사진 분석 서비스 — Gemini 2.5 Flash (비전)
 // 이미지(base64) → 음식명·칼로리·탄단지·당류·혈당영향 구조화 결과
-// ⚠️ 외부 API 호출은 services/에만. UI에서 직접 호출하지 않음.
+// ⚠️ 키 노출 방지: Gemini를 직접 부르지 않고 프록시(Cloudflare Worker) 경유.
+//    키는 프록시 서버에만 있고, 앱 번들에는 프록시 주소만 들어감.
 
 import type { BloodSugarImpact, FoodItem } from '@/types';
 
-const MODEL = 'gemini-2.5-flash';
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+// 프록시 주소 (공개돼도 무방). 키는 프록시 서버 쪽 시크릿에만 존재.
+const PROXY_URL = process.env.EXPO_PUBLIC_GEMINI_PROXY_URL;
 
 // 분석 결과(저장 전, 사용자가 수정 가능한 형태)
 export interface FoodAnalysisResult {
@@ -55,18 +56,16 @@ export async function analyzeFoodImage(
   base64: string,
   mimeType: string = 'image/jpeg'
 ): Promise<FoodAnalysisResult> {
-  const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-  if (!apiKey || apiKey.length < 20) {
-    throw new Error('Gemini API 키가 설정되지 않았습니다. (.env 확인)');
+  if (!PROXY_URL) {
+    throw new Error('분석 서버 주소가 설정되지 않았습니다. (.env의 EXPO_PUBLIC_GEMINI_PROXY_URL 확인)');
   }
 
   let res: Response;
   try {
-    res = await fetch(ENDPOINT, {
+    res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey,
       },
       body: JSON.stringify({
         contents: [
@@ -96,7 +95,7 @@ export async function analyzeFoodImage(
     } catch {}
     if (res.status === 429) throw new Error('오늘 무료 분석 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.');
     if (res.status === 400 || res.status === 403)
-      throw new Error('API 키 인증에 실패했습니다. (.env의 Gemini 키 확인)');
+      throw new Error('분석 서버 인증에 실패했습니다. (프록시 설정/허용 주소 확인)');
     throw new Error(`분석 서버 오류 (${res.status}) ${detail}`.trim());
   }
 
