@@ -16,9 +16,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/contexts/auth-context';
 import { signOut } from '@/services/auth';
+import {
+  deleteExercise,
+  getExercisesByDate,
+  sumCaloriesBurned,
+} from '@/services/exercises';
 import { deleteMeal, getMealsByDate, sumCalories, sumProtein, sumSugar } from '@/services/meals';
 import { saveProfile } from '@/services/users';
-import type { GoalMode, Meal } from '@/types';
+import type { Exercise, GoalMode, Meal } from '@/types';
+import { EXERCISE_TYPE_LABELS } from '@/utils/exercise';
 import {
   calcAge,
   calcGoalCalories,
@@ -35,13 +41,18 @@ export default function HomeScreen() {
   const router = useRouter();
 
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadMeals = useCallback(async () => {
+  const loadToday = useCallback(async () => {
     if (!user) return;
     try {
-      const list = await getMealsByDate(user.uid, todayKey());
-      setMeals(list);
+      const [mealList, exList] = await Promise.all([
+        getMealsByDate(user.uid, todayKey()),
+        getExercisesByDate(user.uid, todayKey()),
+      ]);
+      setMeals(mealList);
+      setExercises(exList);
     } catch {
       // 조용히 실패 (네트워크 등) — 화면은 유지
     } finally {
@@ -49,11 +60,11 @@ export default function HomeScreen() {
     }
   }, [user]);
 
-  // 화면에 들어올 때마다 새로고침 (식사 기록 후 돌아오면 반영)
+  // 화면에 들어올 때마다 새로고침 (식사/운동 기록 후 돌아오면 반영)
   useFocusEffect(
     useCallback(() => {
-      loadMeals();
-    }, [loadMeals])
+      loadToday();
+    }, [loadToday])
   );
 
   function confirmDelete(meal: Meal) {
@@ -65,7 +76,22 @@ export default function HomeScreen() {
         onPress: async () => {
           if (!user || !meal.id) return;
           await deleteMeal(user.uid, meal.id);
-          loadMeals();
+          loadToday();
+        },
+      },
+    ]);
+  }
+
+  function confirmDeleteExercise(ex: Exercise) {
+    Alert.alert('운동 삭제', '이 운동 기록을 삭제할까요?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: async () => {
+          if (!user || !ex.id) return;
+          await deleteExercise(user.uid, ex.id);
+          loadToday();
         },
       },
     ]);
@@ -74,7 +100,9 @@ export default function HomeScreen() {
   if (!profile) return null; // _layout이 분기 처리
 
   const consumed = sumCalories(meals);
-  const remaining = profile.targetCalories - consumed;
+  const burned = sumCaloriesBurned(exercises);
+  // 칼로리 수지: 남은 = 목표 - 섭취 + 소모운동
+  const remaining = profile.targetCalories - consumed + burned;
   const totalSugar = sumSugar(meals);
 
   // 목표 방향 + 단백질 (하위호환: 미설정이면 유지/체중기반 계산)
@@ -140,7 +168,7 @@ export default function HomeScreen() {
           <View style={styles.cardRow}>
             <Text style={styles.cardSub}>목표 {profile.targetCalories.toLocaleString()}</Text>
             <Text style={styles.cardSub}>섭취 {consumed.toLocaleString()}</Text>
-            <Text style={styles.cardSub}>당류 {totalSugar}g</Text>
+            <Text style={styles.cardSub}>운동 −{burned.toLocaleString()}</Text>
           </View>
         </View>
 
@@ -167,6 +195,16 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.addBtn} onPress={() => router.push('/add-meal')}>
           <Text style={styles.addBtnText}>＋  식사 기록하기</Text>
         </TouchableOpacity>
+
+        {/* 운동 · 체성분 진입 버튼 */}
+        <View style={styles.subBtnRow}>
+          <TouchableOpacity style={styles.subBtn} onPress={() => router.push('/add-exercise')}>
+            <Text style={styles.subBtnText}>🏃  운동 기록</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.subBtn} onPress={() => router.push('/body')}>
+            <Text style={styles.subBtnText}>⚖️  체성분</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* 오늘의 식사 */}
         <Text style={styles.sectionTitle}>오늘의 식사</Text>
@@ -208,6 +246,29 @@ export default function HomeScreen() {
 
         {meals.length > 0 ? (
           <Text style={styles.hint}>식사 카드를 길게 누르면 삭제할 수 있어요.</Text>
+        ) : null}
+
+        {/* 오늘의 운동 */}
+        {exercises.length > 0 ? (
+          <>
+            <Text style={styles.sectionTitle}>오늘의 운동</Text>
+            {exercises.map((e) => (
+              <TouchableOpacity
+                key={e.id}
+                style={styles.exCard}
+                onLongPress={() => confirmDeleteExercise(e)}>
+                <View style={styles.exLeft}>
+                  <Text style={styles.exType}>{EXERCISE_TYPE_LABELS[e.type]}</Text>
+                  <Text style={styles.exName}>{e.name}</Text>
+                </View>
+                <View style={styles.exRight}>
+                  <Text style={styles.exKcal}>−{e.caloriesBurned.toLocaleString()} kcal</Text>
+                  <Text style={styles.exDur}>{e.durationMin}분</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+            <Text style={styles.hint}>운동 카드를 길게 누르면 삭제할 수 있어요.</Text>
+          </>
         ) : null}
 
         {/* 프로필 요약 */}
@@ -295,6 +356,34 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   addBtnText: { color: '#208AEF', fontSize: 16, fontWeight: '700' },
+
+  subBtnRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
+  subBtn: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E1E6',
+  },
+  subBtnText: { color: '#3C4043', fontSize: 15, fontWeight: '700' },
+
+  exCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  exLeft: { flexShrink: 1 },
+  exType: { fontSize: 12, fontWeight: '700', color: '#208AEF' },
+  exName: { fontSize: 15, fontWeight: '600', color: '#000', marginTop: 3 },
+  exRight: { alignItems: 'flex-end' },
+  exKcal: { fontSize: 16, fontWeight: '800', color: '#30A46C' },
+  exDur: { fontSize: 12, color: '#9AA0A6', marginTop: 2 },
 
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#000', marginTop: 20, marginBottom: 10 },
   empty: { backgroundColor: '#fff', borderRadius: 16, padding: 28, alignItems: 'center' },

@@ -48,6 +48,8 @@ function RootNavigator() {
       <Stack.Screen name="signup" />
       <Stack.Screen name="profile-setup" />
       <Stack.Screen name="add-meal" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="add-exercise" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="body" />
     </Stack>
   );
 }

@@ -63,8 +63,15 @@
   - ⚠️ baseUrl="/acoach" → GitHub 저장소 이름은 반드시 `acoach` (다르면 baseUrl과 manifest/sw/+html의 "/acoach/" 경로 모두 변경)
   - 배포: `npx expo export -p web` → dist/ → `npx gh-pages -d dist -t true`(.nojekyll 포함 위해 -t). EXPO_PUBLIC_ 키는 로컬 export 시 번들에 인라인됨(공개 번들에 노출 — 가족용 한정 감수)
   - 웹 한계(경미): Alert.alert(식사 삭제 확인) 등 일부 RN-web UX 차이
-- [ ] (다음) 체성분 기록·추이(체중/체지방률/골격근량), 운동 기록(유산소/근력 구분)
-- [ ] Day 5+: 실사용 검증
+- [x] Day 5: 체성분 기록·추이 + 운동 기록(한 세션에 둘 다). 북극성=칼로리 수지(섭취−소모) + 근육량 조절.
+  - 새 파일: types(ExerciseType·Exercise·BodyComposition), services/exercises.ts, services/bodyComposition.ts, utils/exercise.ts(MET 프리셋), app/add-exercise.tsx(모달), app/body.tsx
+  - 변경: app/_layout.tsx(add-exercise 모달·body 라우트), app/(tabs)/index.tsx(운동 소모칼로리 반영·운동/체성분 진입버튼·오늘의 운동 목록)
+  - 운동: 유산소/근력 프리셋 선택→시간 입력→소모칼로리 자동계산(calcCaloriesBurned, MET×체중×시간, 수정 가능). users/{uid}/exercises/{id}. 홈 남은칼로리=목표−섭취+소모.
+  - 체성분: 체중(필수)·체지방률·골격근량 입력, 하루 1건(date=문서ID, 덮어씀). users/{uid}/bodyComposition/{date}. 추이는 라이브러리 없이 View 막대차트(지표 토글: 체중/체지방률/골격근량, 최근 12개).
+  - 체중 저장 시 프로필 weight·targetCalories·targetProtein 자동 재계산(북극성 최신 유지).
+  - ⚠️ typedRoutes 활성 → 새 라우트는 .expo/types/router.d.ts 재생성 필요(폰에서 expo start 시 자동). 이 세션은 tsc 통과 위해 수동 패치.
+  - tsc --noEmit 통과. 폰 리로드가 실제 검증.
+- [ ] Day 6+: 실사용 검증
 - 이후 로드맵: `../에이코치_개발_로드맵.md` 참고
 
 ## 작업 규칙

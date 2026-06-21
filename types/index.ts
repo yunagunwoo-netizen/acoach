@@ -61,6 +61,30 @@ export interface Meal {
   createdAt: number;
 }
 
+// ── 운동 기록 ── 북극성: 칼로리 수지(섭취 - 소모)
+export type ExerciseType = 'cardio' | 'strength'; // 유산소 / 근력
+
+// 운동 한 건 (Firestore: users/{userId}/exercises/{exerciseId})
+export interface Exercise {
+  id?: string;
+  date: string; // "2026-06-21"
+  type: ExerciseType;
+  name: string; // "빠르게 걷기", "웨이트" 등
+  durationMin: number; // 운동 시간(분)
+  caloriesBurned: number; // 소모 칼로리(kcal) — MET 기반 추정, 사용자 수정 가능
+  createdAt: number;
+}
+
+// ── 체성분 기록 ── 북극성: 근육량 조절
+// 하루 1건(같은 날짜 재입력 시 덮어씀) — Firestore: users/{userId}/bodyComposition/{date}
+export interface BodyComposition {
+  date: string; // "2026-06-21" (= 문서 ID)
+  weight: number; // 체중(kg) — 필수
+  bodyFatPercent?: number; // 체지방률(%)
+  skeletalMuscleMass?: number; // 골격근량(kg)
+  createdAt: number;
+}
+
 // 건강검진 기록 (Firestore: users/{userId}/healthCheckups/{year})
 export interface HealthCheckup {
   year: number;
