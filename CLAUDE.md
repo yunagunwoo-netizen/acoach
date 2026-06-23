@@ -5,6 +5,40 @@
 > 새 작업 세션을 시작할 때 Claude가 이 파일을 먼저 읽고 맥락을 파악합니다.
 > 기능을 추가/변경할 때마다 아래 "진행 상황"을 갱신하세요.
 
+## 🚩 다음 세션 빠른 시작 (핸드오프 · 2026-06-23)
+
+**▶ 다음 작업: 건강검진 입력 → 목표 조정** (또는 알림·리마인더 / 캘린더 뷰 중 택1)
+`HealthCheckup` 타입은 정의돼 있으나 미구현. 입력 화면(연 1건, `users/{uid}/healthCheckups/{year}`)을 만들고, 공복혈당·혈압·체중 등을 받아 목표(칼로리·단백질·목표혈당)에 반영하는 흐름. 순수 계산은 `utils/`, 외부 연동은 `services/`.
+
+**✅ 직전 완료: "오늘의 코칭 카드" (커밋·배포 대기)**
+- 새 파일 `utils/coach.ts` — 순수 함수 `getCoachTips(input)`. 남은 칼로리·단백질·목표모드·시간대 기반으로 코치 멘트 1~2줄 생성. 아침 빈 상태/단백질 부족/칼로리 초과·여유를 감량·유지·증량별로 다르게 안내. 초과 시 "N분 걷기" 환산(MET 3.5, 10~60분).
+- 변경 `app/(tabs)/index.tsx` — 단백질 게이지 아래 "🧑‍🏫 오늘의 코칭" 카드 추가(상위 2개 표시). `getCoachTips` 호출 + coachCard 스타일.
+- ⚠️ **이 세션도 리눅스 미러 깨짐**(bash가 파일을 잘린 상태로 봄 → git/tsc 불가). 파일 도구로만 작업함. **노트북에서 직접 검증·커밋·배포 필요**: 폰에서 PWA 새로고침 → 홈 코칭 카드 확인 → `git add -A && git commit -m "코칭 카드"` → `npx expo export -p web` → `npx gh-pages -d dist --dotfiles`.
+
+**✅ 브랜딩: 로고·아이콘 (커밋·배포 대기)**
+- 힉스필드(Higgsfield, nano_banana_pro)로 3D 글로시 마스코트 + "A" 로고 생성. 블루 캡슐 캐릭터(친근한 헬스 트레이너) + 가슴 "A".
+- 선택 로고(logo_1)를 앱 아이콘 전체에 적용: `assets/images/icon.png`(1024)·`favicon.png`(196)·`splash-icon.png`(1024), `public/icon-192.png`·`public/icon-512.png`. app.json·manifest.json은 경로 동일 → 파일만 교체.
+- ⚠️ **안드로이드 적응형 아이콘**(android-icon-foreground 등)은 투명 배경 작업 필요해서 미적용 — 추후.
+- 코칭 카드 아바타: A_3(가슴 "A") 배경제거 투명본을 `assets/images/coach-avatar.png`(512, RGBA)로 저장 → 홈 코칭 카드 🧑‍🏫 이모지를 `<Image>`로 교체 완료(coachAvatar 스타일 32px 원형). 원본 투명본: coach-avatar-source.png.
+
+**현재 상태**: Day 1~6 + PWA + Gemini 프록시 전환 완료·배포·푸시됨. 코칭 카드 코드 + 로고/아이콘 교체 완료, 커밋/배포 대기.
+- 라이브 PWA: https://yunagunwoo-netizen.github.io/acoach/
+- 흐름: 프로필·목표모드 → 사진 식단분석(프록시) → 식약처 보정 → 식사·운동 기록 → 체성분 추이 → 일·주간 통계. 홈 = 칼로리수지(목표−섭취+운동) + 단백질 게이지.
+
+**⚠️ 작업 환경 필수 주의**
+- 경로에 띄어쓰기("내 드라이브") → 명령은 **항상 따옴표**: `cd "C:\Users\ggyeo\내 드라이브\dev\에이코치\acoach"`
+- **여러 노트북 + 구글드라이브 동기화** 사용 → 작업 시작 전 `git pull` 먼저, 두 노트북에서 동시에 git 만지지 말 것(.git 동기화 충돌·잠금 위험).
+- git 잠금 에러(HEAD.lock/index.lock) → `Remove-Item .git\*.lock -Force` 후 재시도.
+- 배포: `npx expo export -p web` → `npx gh-pages -d dist --dotfiles` (⚠️ `-t true`는 에러, `--dotfiles`만). export가 typedRoutes 타입 자동 재생성.
+- **Gemini 키를 EXPO_PUBLIC_로 번들에 넣지 말 것** — 프록시 사용. Worker: https://acoach-gemini.ggyeong567.workers.dev (Cloudflare 계정 Ggyeong567@gmail.com). 키 교체 시 Worker 시크릿만 변경. 번들에 키 들어가면 GitHub push protection이 막음.
+- GitHub: yunagunwoo-netizen/acoach (main). 검증은 폰에서 PWA 새로고침.
+
+**다음 후보(코칭 카드 이후)**: 건강검진 입력→목표 조정 / 알림·리마인더 / 캘린더 뷰.
+
+**비즈니스 맥락**: 언노운짐(양천구청점·응암점) 회원 서비스로 차별화. 2026 혁신 소상공인 AI 활용지원 사업 신청 준비(뼈대: `../언노운짐_에이코치_사업계획서_뼈대.md`, 신청 ~7/3). 북극성 = 칼로리 수지 + 근육량을 식단·다양한 운동으로 조절.
+
+---
+
 ## 한 줄 소개
 음식 사진을 찍으면 AI(Gemini)가 칼로리·영양·혈당 영향을 추정하고, 식단·운동·수면을 코칭하는 개인용 건강관리 앱. 가족·친구 소규모 공유 목표.
 
@@ -82,7 +116,8 @@
 - [x] Day 6: 일·주간 요약 그래프 (app/stats.tsx). 최근 7/14일 식사·운동 집계 → 일별 막대(섭취/단백질/당류/순=섭취−운동) + 기간 요약(평균 섭취·단백질, 단백질 목표달성 일수, 운동소모 합).
   - 새 파일: app/stats.tsx (라이브러리 없이 View 막대 + 목표선, 지표/기간 토글)
   - 변경: services/meals.ts(getMealsSince), services/exercises.ts(getExercisesSince) — 단일 범위필터(date>=)라 인덱스 불필요, utils/date.ts(lastNDateKeys), app/_layout.tsx(stats 라우트), app/(tabs)/index.tsx(홈 '📊 통계' 진입버튼)
-- [ ] Day 7+: 실사용 검증 / 다음: 오늘의 코칭 카드, 건강검진 입력→목표 조정, 알림·캘린더
+- [x] 오늘의 코칭 카드: utils/coach.ts(getCoachTips, 순수) + 홈 카드. 남은칼로리·단백질·목표모드·시간대 기반 1~2줄 제안. (코드 완료, 노트북에서 커밋·배포 필요)
+- [ ] Day 7+: 실사용 검증 / 다음: 건강검진 입력→목표 조정, 알림·캘린더
 - 이후 로드맵: `../에이코치_개발_로드맵.md` 참고
 
 ## 작업 규칙

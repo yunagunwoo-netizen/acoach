@@ -6,6 +6,7 @@ import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -35,6 +36,7 @@ import {
   GOAL_ORDER,
 } from '@/utils/calories';
 import { BLOOD_SUGAR_LABELS, MEAL_TYPE_LABELS, todayKey } from '@/utils/date';
+import { getCoachTips } from '@/utils/coach';
 
 export default function HomeScreen() {
   const { user, profile, refreshProfile } = useAuth();
@@ -111,6 +113,19 @@ export default function HomeScreen() {
   const consumedProtein = sumProtein(meals);
   const proteinPct =
     targetProtein > 0 ? Math.min(100, Math.round((consumedProtein / targetProtein) * 100)) : 0;
+
+  // 오늘의 코칭 카드 — 위 1~2개 제안만 표시 (로직은 utils/coach)
+  const coachTips = getCoachTips({
+    goal,
+    remaining,
+    consumed,
+    burned,
+    targetCalories: profile.targetCalories,
+    consumedProtein,
+    targetProtein,
+    weightKg: profile.weight,
+    eatenMealTypes: meals.map((m) => m.mealType),
+  }).slice(0, 2);
 
   // 목표 모드 변경 → 칼로리·단백질 목표 재계산 후 저장 (기존 사용자도 즉시 적용)
   async function changeGoal(g: GoalMode) {
@@ -190,6 +205,25 @@ export default function HomeScreen() {
               : `목표까지 ${targetProtein - consumedProtein}g 남았어요`}
           </Text>
         </View>
+
+        {/* 오늘의 코칭 카드 — 남은 칼로리/단백질/목표 기반 제안 */}
+        {!loading && coachTips.length > 0 ? (
+          <View style={styles.coachCard}>
+            <View style={styles.coachHead}>
+              <Image
+                source={require('../../assets/images/coach-avatar.png')}
+                style={styles.coachAvatar}
+              />
+              <Text style={styles.coachTitle}>오늘의 코칭</Text>
+            </View>
+            {coachTips.map((tip, i) => (
+              <View key={i} style={styles.coachTip}>
+                <Text style={styles.coachTipIcon}>{tip.icon}</Text>
+                <Text style={styles.coachTipText}>{tip.text}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
         {/* 식사 기록 버튼 */}
         <TouchableOpacity style={styles.addBtn} onPress={() => router.push('/add-meal')}>
@@ -348,6 +382,22 @@ const styles = StyleSheet.create({
   unit: { fontSize: 18, fontWeight: '600' },
   cardRow: { flexDirection: 'row', gap: 16, marginTop: 10 },
   cardSub: { color: '#D6E9FF', fontSize: 13 },
+
+  coachCard: {
+    backgroundColor: '#F0F7FF',
+    borderRadius: 20,
+    padding: 18,
+    marginTop: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#D6E9FF',
+  },
+  coachHead: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  coachAvatar: { width: 32, height: 32, borderRadius: 16 },
+  coachTitle: { fontSize: 14, fontWeight: '800', color: '#208AEF' },
+  coachTip: { flexDirection: 'row', gap: 8, marginTop: 6, alignItems: 'flex-start' },
+  coachTipIcon: { fontSize: 15, lineHeight: 20 },
+  coachTipText: { flex: 1, fontSize: 14, color: '#1B3A5B', lineHeight: 20, fontWeight: '600' },
 
   addBtn: {
     backgroundColor: '#fff',
