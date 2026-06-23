@@ -10,6 +10,17 @@ export function todayKey(d: Date = new Date()): string {
   return `${y}-${m}-${day}`;
 }
 
+// 최근 n일(오늘 포함) 날짜 키 배열 (오래된→최신). 누락된 날을 0으로 채울 때 사용.
+export function lastNDateKeys(n: number, base: Date = new Date()): string[] {
+  const keys: string[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(base);
+    d.setDate(base.getDate() - i);
+    keys.push(todayKey(d));
+  }
+  return keys;
+}
+
 // 현재 시각 "HH:MM"
 export function nowTime(d: Date = new Date()): string {
   const h = String(d.getHours()).padStart(2, '0');

@@ -79,7 +79,10 @@
   - 체중 저장 시 프로필 weight·targetCalories·targetProtein 자동 재계산(북극성 최신 유지).
   - ⚠️ typedRoutes 활성 → 새 라우트는 .expo/types/router.d.ts 재생성 필요(폰에서 expo start 시 자동). 이 세션은 tsc 통과 위해 수동 패치.
   - tsc --noEmit 통과. 폰 리로드가 실제 검증.
-- [ ] Day 6+: 실사용 검증
+- [x] Day 6: 일·주간 요약 그래프 (app/stats.tsx). 최근 7/14일 식사·운동 집계 → 일별 막대(섭취/단백질/당류/순=섭취−운동) + 기간 요약(평균 섭취·단백질, 단백질 목표달성 일수, 운동소모 합).
+  - 새 파일: app/stats.tsx (라이브러리 없이 View 막대 + 목표선, 지표/기간 토글)
+  - 변경: services/meals.ts(getMealsSince), services/exercises.ts(getExercisesSince) — 단일 범위필터(date>=)라 인덱스 불필요, utils/date.ts(lastNDateKeys), app/_layout.tsx(stats 라우트), app/(tabs)/index.tsx(홈 '📊 통계' 진입버튼)
+- [ ] Day 7+: 실사용 검증 / 다음: 오늘의 코칭 카드, 건강검진 입력→목표 조정, 알림·캘린더
 - 이후 로드맵: `../에이코치_개발_로드맵.md` 참고
 
 ## 작업 규칙

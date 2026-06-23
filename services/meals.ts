@@ -25,6 +25,13 @@ export async function getMealsByDate(userId: string, date: string): Promise<Meal
   return meals.sort((a, b) => a.createdAt - b.createdAt);
 }
 
+// 특정 날짜 이후(>= startDate)의 모든 식사 — 주간/월간 집계용 (단일 범위필터=인덱스 불필요)
+export async function getMealsSince(userId: string, startDate: string): Promise<Meal[]> {
+  const q = query(mealsCol(userId), where('date', '>=', startDate));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Meal, 'id'>) }));
+}
+
 // 식사 기록 삭제
 export async function deleteMeal(userId: string, mealId: string): Promise<void> {
   await deleteDoc(doc(db, 'users', userId, 'meals', mealId));

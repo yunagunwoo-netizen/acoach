@@ -196,13 +196,16 @@ export default function HomeScreen() {
           <Text style={styles.addBtnText}>＋  식사 기록하기</Text>
         </TouchableOpacity>
 
-        {/* 운동 · 체성분 진입 버튼 */}
+        {/* 운동 · 체성분 · 통계 진입 버튼 */}
         <View style={styles.subBtnRow}>
           <TouchableOpacity style={styles.subBtn} onPress={() => router.push('/add-exercise')}>
-            <Text style={styles.subBtnText}>🏃  운동 기록</Text>
+            <Text style={styles.subBtnText}>🏃  운동</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.subBtn} onPress={() => router.push('/body')}>
             <Text style={styles.subBtnText}>⚖️  체성분</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.subBtn} onPress={() => router.push('/stats')}>
+            <Text style={styles.subBtnText}>📊  통계</Text>
           </TouchableOpacity>
         </View>
 
