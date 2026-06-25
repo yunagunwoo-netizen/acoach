@@ -4,6 +4,7 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -44,6 +45,7 @@ export default function LoginScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.container}>
+        <Image source={require('../assets/images/logo.png')} style={styles.logoImg} />
         <Text style={styles.logo}>에이코치</Text>
         <Text style={styles.subtitle}>건강 코칭을 시작해요</Text>
 
@@ -92,6 +94,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#fff' },
   container: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
+  logoImg: { width: 96, height: 96, borderRadius: 22, alignSelf: 'center', marginBottom: 16 },
   logo: { fontSize: 36, fontWeight: '800', color: '#208AEF', textAlign: 'center' },
   subtitle: {
     fontSize: 15,

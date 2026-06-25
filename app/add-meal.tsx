@@ -26,6 +26,7 @@ import type { BloodSugarImpact, FoodItem, Meal, MealType } from '@/types';
 import {
   BLOOD_SUGAR_LABELS,
   guessMealType,
+  MEAL_TYPE_ICONS,
   MEAL_TYPE_LABELS,
   MEAL_TYPE_ORDER,
   nowTime,
@@ -199,6 +200,11 @@ export default function AddMealScreen() {
           {/* ── 사진 선택 단계 ── */}
           {phase === 'pick' && (
             <View style={styles.pickBox}>
+              <Image
+                source={require('../assets/images/photo-empty.png')}
+                style={styles.pickIllust}
+                contentFit="contain"
+              />
               <Text style={styles.pickHint}>
                 음식 사진을 찍거나 갤러리에서 고르면{'\n'}AI가 칼로리와 영양을 추정해요.
               </Text>
@@ -229,8 +235,9 @@ export default function AddMealScreen() {
                 {MEAL_TYPE_ORDER.map((t) => (
                   <TouchableOpacity
                     key={t}
-                    style={[styles.chip, mealType === t && styles.chipActive]}
+                    style={[styles.chip, styles.chipWithIcon, mealType === t && styles.chipActive]}
                     onPress={() => setMealType(t)}>
+                    <Image source={MEAL_TYPE_ICONS[t]} style={styles.chipIcon} contentFit="contain" />
                     <Text style={[styles.chipText, mealType === t && styles.chipTextActive]}>
                       {MEAL_TYPE_LABELS[t]}
                     </Text>
@@ -430,6 +437,7 @@ const styles = StyleSheet.create({
   },
 
   pickBox: { marginTop: 24, gap: 12 },
+  pickIllust: { width: 150, height: 150, alignSelf: 'center' },
   pickHint: { fontSize: 15, color: '#60646C', textAlign: 'center', lineHeight: 22, marginBottom: 12 },
   primaryBtn: { backgroundColor: '#208AEF', borderRadius: 14, paddingVertical: 18, alignItems: 'center' },
   primaryBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
@@ -458,6 +466,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
   },
+  chipWithIcon: { flexDirection: 'row', gap: 4, justifyContent: 'center', alignItems: 'center' },
+  chipIcon: { width: 20, height: 20 },
   chipActive: { backgroundColor: '#208AEF', borderColor: '#208AEF' },
   chipText: { fontSize: 14, color: '#60646C', fontWeight: '600' },
   chipTextActive: { color: '#fff' },

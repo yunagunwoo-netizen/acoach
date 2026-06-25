@@ -5,6 +5,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import type { ImageSourcePropType } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/contexts/auth-context';
@@ -29,10 +31,10 @@ import { todayKey } from '@/utils/date';
 
 // 추이 차트에서 고를 수 있는 지표
 type Metric = 'weight' | 'bodyFatPercent' | 'skeletalMuscleMass';
-const METRICS: { key: Metric; label: string; unit: string }[] = [
-  { key: 'weight', label: '체중', unit: 'kg' },
-  { key: 'bodyFatPercent', label: '체지방률', unit: '%' },
-  { key: 'skeletalMuscleMass', label: '골격근량', unit: 'kg' },
+const METRICS: { key: Metric; label: string; unit: string; icon: ImageSourcePropType }[] = [
+  { key: 'weight', label: '체중', unit: 'kg', icon: require('../assets/icons/scale.png') },
+  { key: 'bodyFatPercent', label: '체지방률', unit: '%', icon: require('../assets/icons/tape.png') },
+  { key: 'skeletalMuscleMass', label: '골격근량', unit: 'kg', icon: require('../assets/icons/muscle.png') },
 ];
 
 export default function BodyScreen() {
@@ -206,6 +208,7 @@ export default function BodyScreen() {
                 key={m.key}
                 style={[styles.metricTab, metric === m.key && styles.metricTabActive]}
                 onPress={() => setMetric(m.key)}>
+                <Image source={m.icon} style={styles.metricIcon} resizeMode="contain" />
                 <Text
                   style={[styles.metricText, metric === m.key && styles.metricTextActive]}>
                   {m.label}
@@ -218,6 +221,10 @@ export default function BodyScreen() {
             <ActivityIndicator color="#208AEF" style={{ marginTop: 24 }} />
           ) : series.length === 0 ? (
             <View style={styles.empty}>
+              <Image
+                source={require('../assets/images/coach-avatar.png')}
+                style={styles.emptyMascot}
+              />
               <Text style={styles.emptyText}>
                 아직 기록이 없어요.{'\n'}위에서 첫 기록을 저장해 보세요!
               </Text>
@@ -324,6 +331,9 @@ const styles = StyleSheet.create({
   metricRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   metricTab: {
     flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 4,
     borderWidth: 1,
     borderColor: '#E0E1E6',
     backgroundColor: '#fff',
@@ -331,11 +341,13 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     alignItems: 'center',
   },
+  metricIcon: { width: 20, height: 20 },
   metricTabActive: { backgroundColor: '#208AEF', borderColor: '#208AEF' },
   metricText: { fontSize: 14, color: '#60646C', fontWeight: '700' },
   metricTextActive: { color: '#fff' },
 
   empty: { backgroundColor: '#fff', borderRadius: 16, padding: 28, alignItems: 'center' },
+  emptyMascot: { width: 88, height: 88, marginBottom: 12 },
   emptyText: { fontSize: 14, color: '#9AA0A6', textAlign: 'center', lineHeight: 21 },
 
   chartCard: { backgroundColor: '#fff', borderRadius: 20, padding: 18 },

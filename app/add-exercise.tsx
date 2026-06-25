@@ -4,6 +4,7 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -22,6 +23,7 @@ import { calcCaloriesBurned } from '@/utils/calories';
 import { nowTime, todayKey } from '@/utils/date';
 import {
   EXERCISE_PRESETS,
+  EXERCISE_TYPE_ICONS,
   EXERCISE_TYPE_LABELS,
   EXERCISE_TYPE_ORDER,
 } from '@/utils/exercise';
@@ -123,6 +125,7 @@ export default function AddExerciseScreen() {
                 key={t}
                 style={[styles.typeTab, type === t && styles.typeTabActive]}
                 onPress={() => changeType(t)}>
+                <Image source={EXERCISE_TYPE_ICONS[t]} style={styles.typeIcon} resizeMode="contain" />
                 <Text style={[styles.typeTabText, type === t && styles.typeTabTextActive]}>
                   {EXERCISE_TYPE_LABELS[t]}
                 </Text>
@@ -138,6 +141,7 @@ export default function AddExerciseScreen() {
                 key={p.name}
                 style={[styles.preset, name === p.name && styles.presetActive]}
                 onPress={() => selectPreset(p)}>
+                <Image source={p.icon} style={styles.presetIcon} resizeMode="contain" />
                 <Text style={[styles.presetText, name === p.name && styles.presetTextActive]}>
                   {p.name}
                 </Text>
@@ -219,6 +223,9 @@ const styles = StyleSheet.create({
   typeRow: { flexDirection: 'row', gap: 8 },
   typeTab: {
     flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 5,
     borderWidth: 1,
     borderColor: '#E0E1E6',
     backgroundColor: '#fff',
@@ -226,12 +233,16 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
   },
+  typeIcon: { width: 22, height: 22 },
   typeTabActive: { backgroundColor: '#208AEF', borderColor: '#208AEF' },
   typeTabText: { fontSize: 15, color: '#60646C', fontWeight: '700' },
   typeTabTextActive: { color: '#fff' },
 
   presetWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   preset: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     borderWidth: 1,
     borderColor: '#E0E1E6',
     backgroundColor: '#fff',
@@ -239,6 +250,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
+  presetIcon: { width: 20, height: 20 },
   presetActive: { backgroundColor: '#E7F1FE', borderColor: '#208AEF' },
   presetText: { fontSize: 14, color: '#3C4043', fontWeight: '600' },
   presetTextActive: { color: '#208AEF' },

@@ -3,7 +3,7 @@
 
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/contexts/auth-context';
@@ -98,7 +98,7 @@ export default function StatsScreen() {
           <Text style={styles.back}>← 홈</Text>
         </TouchableOpacity>
         <Text style={styles.topTitle}>통계</Text>
-        <View style={{ width: 40 }} />
+        <Image source={require('../assets/images/coach-avatar.png')} style={styles.topMascot} />
       </View>
 
       <ScrollView contentContainerStyle={styles.container}>
@@ -116,7 +116,10 @@ export default function StatsScreen() {
 
         {/* 기간 요약 */}
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>기록 {loggedDays.length}일 · 평균</Text>
+          <View style={styles.summaryTitleRow}>
+            <Image source={require('../assets/icons/chart.png')} style={styles.summaryIcon} resizeMode="contain" />
+            <Text style={styles.summaryTitle}>기록 {loggedDays.length}일 · 평균</Text>
+          </View>
           <View style={styles.summaryRow}>
             <Summary label="섭취" value={`${avgIntake.toLocaleString()}`} unit="kcal" />
             <Summary label="단백질" value={`${avgProtein}`} unit="g" />
@@ -232,6 +235,7 @@ const styles = StyleSheet.create({
   },
   back: { fontSize: 16, color: '#208AEF', fontWeight: '600' },
   topTitle: { fontSize: 17, fontWeight: '700', color: '#000' },
+  topMascot: { width: 36, height: 36, borderRadius: 18 },
   container: { paddingHorizontal: 20, paddingBottom: 40 },
 
   segRow: { flexDirection: 'row', gap: 8, marginTop: 4, marginBottom: 14 },
@@ -249,7 +253,9 @@ const styles = StyleSheet.create({
   segTextActive: { color: '#fff' },
 
   summaryCard: { backgroundColor: '#fff', borderRadius: 20, padding: 18, marginBottom: 16 },
-  summaryTitle: { fontSize: 13, color: '#60646C', fontWeight: '600', marginBottom: 12 },
+  summaryTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
+  summaryIcon: { width: 20, height: 20 },
+  summaryTitle: { fontSize: 13, color: '#60646C', fontWeight: '600' },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
   summaryItem: { alignItems: 'center', flex: 1 },
   summaryValue: { fontSize: 17, fontWeight: '800', color: '#000' },

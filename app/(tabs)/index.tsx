@@ -35,7 +35,7 @@ import {
   GOAL_LABELS,
   GOAL_ORDER,
 } from '@/utils/calories';
-import { BLOOD_SUGAR_LABELS, MEAL_TYPE_LABELS, todayKey } from '@/utils/date';
+import { BLOOD_SUGAR_LABELS, MEAL_TYPE_ICONS, MEAL_TYPE_LABELS, todayKey } from '@/utils/date';
 import { getCoachTips } from '@/utils/coach';
 
 export default function HomeScreen() {
@@ -150,9 +150,15 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>안녕하세요,</Text>
-            <Text style={styles.name}>{profile.name}님 👋</Text>
+          <View style={styles.headerLeft}>
+            <Image
+              source={require('../../assets/images/coach-avatar.png')}
+              style={styles.headerMascot}
+            />
+            <View>
+              <Text style={styles.greeting}>안녕하세요,</Text>
+              <Text style={styles.name}>{profile.name}님 👋</Text>
+            </View>
           </View>
           <TouchableOpacity onPress={() => signOut()}>
             <Text style={styles.logout}>로그아웃</Text>
@@ -175,6 +181,11 @@ export default function HomeScreen() {
 
         {/* 오늘의 칼로리 카드 */}
         <View style={styles.card}>
+          <Image
+            source={require('../../assets/images/flame.png')}
+            style={styles.cardWatermark}
+            resizeMode="contain"
+          />
           <Text style={styles.cardLabel}>{GOAL_DESC[goal]} · 남은 칼로리</Text>
           <Text style={styles.bigNumber}>
             {remaining.toLocaleString()}
@@ -190,7 +201,14 @@ export default function HomeScreen() {
         {/* 단백질 게이지 (근육 조절 핵심 지표) */}
         <View style={styles.proteinCard}>
           <View style={styles.proteinTop}>
-            <Text style={styles.proteinLabel}>단백질 · 근육</Text>
+            <View style={styles.proteinLabelRow}>
+              <Image
+                source={require('../../assets/icons/muscle.png')}
+                style={styles.proteinLabelIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.proteinLabel}>단백질 · 근육</Text>
+            </View>
             <Text style={styles.proteinNums}>
               {consumedProtein}
               <Text style={styles.proteinTarget}> / {targetProtein}g</Text>
@@ -233,13 +251,16 @@ export default function HomeScreen() {
         {/* 운동 · 체성분 · 통계 진입 버튼 */}
         <View style={styles.subBtnRow}>
           <TouchableOpacity style={styles.subBtn} onPress={() => router.push('/add-exercise')}>
-            <Text style={styles.subBtnText}>🏃  운동</Text>
+            <Image source={require('../../assets/icons/run.png')} style={styles.subBtnIcon} resizeMode="contain" />
+            <Text style={styles.subBtnText}>운동</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.subBtn} onPress={() => router.push('/body')}>
-            <Text style={styles.subBtnText}>⚖️  체성분</Text>
+            <Image source={require('../../assets/icons/scale.png')} style={styles.subBtnIcon} resizeMode="contain" />
+            <Text style={styles.subBtnText}>체성분</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.subBtn} onPress={() => router.push('/stats')}>
-            <Text style={styles.subBtnText}>📊  통계</Text>
+            <Image source={require('../../assets/icons/chart.png')} style={styles.subBtnIcon} resizeMode="contain" />
+            <Text style={styles.subBtnText}>통계</Text>
           </TouchableOpacity>
         </View>
 
@@ -249,6 +270,10 @@ export default function HomeScreen() {
           <ActivityIndicator color="#208AEF" style={{ marginTop: 20 }} />
         ) : meals.length === 0 ? (
           <View style={styles.empty}>
+            <Image
+              source={require('../../assets/images/coach-avatar.png')}
+              style={styles.emptyMascot}
+            />
             <Text style={styles.emptyText}>
               아직 기록한 식사가 없어요.{'\n'}첫 끼니를 기록해 보세요!
             </Text>
@@ -260,9 +285,16 @@ export default function HomeScreen() {
               style={styles.mealCard}
               onLongPress={() => confirmDelete(m)}>
               <View style={styles.mealTop}>
-                <Text style={styles.mealType}>
-                  {MEAL_TYPE_LABELS[m.mealType]} · {m.time}
-                </Text>
+                <View style={styles.mealTypeRow}>
+                  <Image
+                    source={MEAL_TYPE_ICONS[m.mealType]}
+                    style={styles.mealTypeIcon}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.mealType}>
+                    {MEAL_TYPE_LABELS[m.mealType]} · {m.time}
+                  </Text>
+                </View>
                 <View
                   style={[
                     styles.mealImpact,
@@ -346,6 +378,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerMascot: { width: 44, height: 44, borderRadius: 22 },
   greeting: { fontSize: 15, color: '#60646C' },
   name: { fontSize: 24, fontWeight: '800', color: '#000', marginTop: 2 },
   logout: { fontSize: 14, color: '#9AA0A6' },
@@ -363,7 +397,8 @@ const styles = StyleSheet.create({
   goalTabText: { fontSize: 15, color: '#60646C', fontWeight: '700' },
   goalTabTextActive: { color: '#fff' },
 
-  card: { backgroundColor: '#208AEF', borderRadius: 20, padding: 24, marginBottom: 16 },
+  card: { backgroundColor: '#208AEF', borderRadius: 20, padding: 24, marginBottom: 16, overflow: 'hidden' },
+  cardWatermark: { position: 'absolute', right: -12, bottom: -12, width: 130, height: 130, opacity: 0.16 },
   proteinCard: { backgroundColor: '#fff', borderRadius: 20, padding: 20, marginBottom: 8 },
   proteinTop: {
     flexDirection: 'row',
@@ -371,6 +406,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginBottom: 12,
   },
+  proteinLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  proteinLabelIcon: { width: 22, height: 22 },
   proteinLabel: { fontSize: 15, fontWeight: '700', color: '#000' },
   proteinNums: { fontSize: 22, fontWeight: '800', color: '#208AEF' },
   proteinTarget: { fontSize: 14, fontWeight: '600', color: '#9AA0A6' },
@@ -413,6 +450,9 @@ const styles = StyleSheet.create({
   subBtnRow: { flexDirection: 'row', gap: 10, marginTop: 10 },
   subBtn: {
     flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
     backgroundColor: '#fff',
     borderRadius: 14,
     paddingVertical: 14,
@@ -420,6 +460,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E1E6',
   },
+  subBtnIcon: { width: 22, height: 22 },
   subBtnText: { color: '#3C4043', fontSize: 15, fontWeight: '700' },
 
   exCard: {
@@ -440,10 +481,13 @@ const styles = StyleSheet.create({
 
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#000', marginTop: 20, marginBottom: 10 },
   empty: { backgroundColor: '#fff', borderRadius: 16, padding: 28, alignItems: 'center' },
+  emptyMascot: { width: 88, height: 88, marginBottom: 12 },
   emptyText: { fontSize: 14, color: '#9AA0A6', textAlign: 'center', lineHeight: 21 },
 
   mealCard: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 10 },
   mealTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  mealTypeRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  mealTypeIcon: { width: 20, height: 20 },
   mealType: { fontSize: 14, fontWeight: '700', color: '#3C4043' },
   mealImpact: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
   mealImpactText: { color: '#fff', fontSize: 11, fontWeight: '700' },

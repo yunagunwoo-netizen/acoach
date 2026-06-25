@@ -4,6 +4,7 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -49,6 +50,7 @@ export default function SignupScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.container}>
+        <Image source={require('../assets/images/mascot-wave.png')} style={styles.mascot} />
         <Text style={styles.logo}>회원가입</Text>
         <Text style={styles.subtitle}>이메일로 간단히 시작하세요</Text>
 
@@ -105,6 +107,7 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#fff' },
   container: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
+  mascot: { width: 110, height: 110, alignSelf: 'center', marginBottom: 8 },
   logo: { fontSize: 30, fontWeight: '800', color: '#000', textAlign: 'center' },
   subtitle: {
     fontSize: 15,

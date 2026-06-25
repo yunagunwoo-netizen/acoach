@@ -21,7 +21,23 @@
 - ⚠️ **안드로이드 적응형 아이콘**(android-icon-foreground 등)은 투명 배경 작업 필요해서 미적용 — 추후.
 - 코칭 카드 아바타: A_3(가슴 "A") 배경제거 투명본을 `assets/images/coach-avatar.png`(512, RGBA)로 저장 → 홈 코칭 카드 🧑‍🏫 이모지를 `<Image>`로 교체 완료(coachAvatar 스타일 32px 원형). 원본 투명본: coach-avatar-source.png.
 
-**현재 상태**: Day 1~6 + PWA + Gemini 프록시 전환 완료·배포·푸시됨. 코칭 카드 코드 + 로고/아이콘 교체 완료, 커밋/배포 대기.
+**✅ UI 이미지화 우선순위1 (커밋·배포 대기)**
+- 새 에셋: `assets/images/mascot-wave.png`(손 흔드는 마스코트, 투명), 기존 `coach-avatar.png`(엄지척 투명)·`logo.png` 재사용.
+- 적용: login(로고 96px 앱아이콘), signup·profile-setup(손 흔드는 마스코트), 빈 상태 home·body(엄지척 마스코트 88px), home 헤더 인사말 옆 아바타 44px, stats 상단바 아바타 36px.
+- 모든 화면 `Image` import 추가, require 경로 검증 완료(index=../../, 그 외=../).
+**✅ UI 이미지화 우선순위2 — 기능 아이콘을 커스텀 3D로 전면 교체 (커밋·배포 대기)**
+- 기본 벡터 아이콘(@expo/vector-icons) **전부 제거** → 힉스필드(nano_banana_pro)로 생성한 **커스텀 3D 글로시 블루 아이콘 18종**으로 교체. 마스코트와 동일 톤, 오브젝트만(타일 없음), 투명 PNG 256px.
+- 에셋: `assets/icons/` 18개 — breakfast·lunch·dinner·snack / run·walk·bike·mountain·swim·jumprope / dumbbell·barbell·muscle·abs·yoga / scale·tape·chart. (배경제거는 흰배경 플러드필 로컬 처리 — 내부 흰색 보존)
+- utils 아이콘맵은 이제 `require('../assets/icons/*.png')`(ImageSourcePropType) 반환: date.ts MEAL_TYPE_ICONS, exercise.ts EXERCISE_TYPE_ICONS + ExercisePreset.icon.
+- 컴포넌트는 MaterialCommunityIcons → `<Image>`로 교체: add-meal 끼니칩(expo-image, contentFit), index 식사카드+진입버튼, add-exercise 종류탭+프리셋, body 지표토글(react-native Image, resizeMode). 활성 배경(솔리드 블루)에서도 가독성 OK(파란 배경 합성 검증함).
+- 매핑: 걷기·빠르게걷기→walk, 달리기·운동nav·cardio→run, 웨이트일반·strength→dumbbell, 체성분nav·체중→scale, 체지방률→tape, 골격근량·맨몸운동→muscle, 통계nav→chart.
+- ⚠️ 미러 지연 시 bash grep이 일부 require 경로 누락 보고 가능 — 실제 파일(Read)이 정답.
+**✅ UI 이미지화 우선순위3 — 카드/빈화면 일러스트 (커밋·배포 대기)**
+- 새 에셋: `assets/images/flame.png`(흰/하늘색 불꽃, 투명), `assets/images/photo-empty.png`(카메라+음식 일러스트, 투명). 근육·차트는 기존 `assets/icons` 재사용.
+- 적용: index 칼로리 파란카드에 불꽃 워터마크(position absolute, opacity 0.16, card에 overflow hidden), index 단백질 카드 라벨 옆 muscle 아이콘, add-meal 사진 pick 단계 상단 카메라 일러스트(150px), stats 요약카드 제목 옆 chart 아이콘.
+- 우선순위1·2·3 모두 완료. (추가 후보: add-meal 촬영/갤러리 버튼 이모지(📷🖼️)도 커스텀 아이콘화 가능 — 미적용)
+
+**현재 상태**: Day 1~6 + PWA + Gemini 프록시 전환 완료·배포·푸시됨. 코칭 카드 + 로고/아이콘 + UI 이미지화(우선순위1·2·3) 전부 완료, 커밋/배포 대기.
 - 라이브 PWA: https://yunagunwoo-netizen.github.io/acoach/
 - 흐름: 프로필·목표모드 → 사진 식단분석(프록시) → 식약처 보정 → 식사·운동 기록 → 체성분 추이 → 일·주간 통계. 홈 = 칼로리수지(목표−섭취+운동) + 단백질 게이지.
 

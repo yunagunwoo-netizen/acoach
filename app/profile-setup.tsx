@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -96,6 +97,7 @@ export default function ProfileSetupScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <Image source={require('../assets/images/mascot-wave.png')} style={styles.mascot} />
         <Text style={styles.title}>프로필 입력</Text>
         <Text style={styles.subtitle}>목표 칼로리를 계산하기 위한 기본 정보예요</Text>
 
@@ -218,6 +220,7 @@ function Chip({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#fff' },
   container: { paddingHorizontal: 24, paddingVertical: 24 },
+  mascot: { width: 96, height: 96, alignSelf: 'center', marginBottom: 4 },
   title: { fontSize: 26, fontWeight: '800', color: '#000' },
   subtitle: { fontSize: 14, color: '#60646C', marginTop: 6, marginBottom: 24 },
   label: { fontSize: 14, fontWeight: '600', color: '#000', marginBottom: 8, marginTop: 16 },

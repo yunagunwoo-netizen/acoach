@@ -1,5 +1,6 @@
 // 날짜/시간 관련 순수 헬퍼 (UI/외부 API와 분리 — utils/)
 
+import type { ImageSourcePropType } from 'react-native';
 import type { MealType } from '@/types';
 
 // 오늘 날짜 키 "YYYY-MM-DD" (기기 로컬 시간 기준)
@@ -45,6 +46,14 @@ export const MEAL_TYPE_LABELS: Record<MealType, string> = {
 };
 
 export const MEAL_TYPE_ORDER: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
+
+// 끼니별 커스텀 3D 아이콘 (assets/icons, 투명 PNG)
+export const MEAL_TYPE_ICONS: Record<MealType, ImageSourcePropType> = {
+  breakfast: require('../assets/icons/breakfast.png'),
+  lunch: require('../assets/icons/lunch.png'),
+  dinner: require('../assets/icons/dinner.png'),
+  snack: require('../assets/icons/snack.png'),
+};
 
 export const BLOOD_SUGAR_LABELS = {
   low: { label: '낮음', color: '#30A46C' },
